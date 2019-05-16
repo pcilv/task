@@ -1,0 +1,175 @@
+消息说明
+(位数不足的补0x20)
+报文：
+00  00  00  01  00  00   00   5c  56 53 53 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 4e 30 30 30 30 35 38 51 30 30 30 33 20 20 20 20 20 20 20 20 00   00   00  0a
+|           |    |            |   |                                                        |   |                                                       |  |             |
+ --MsgType--  --- -BodyLength- --- ----------------------SenderCompID---------------------- --- ---------------------TargetCompID---------------------- -- --HeartBtInt- ---
+.   .   .   .   .   .  .      \   V  S  S                                                     N  0  0  0  0  5  8  Q  0  0  0  3                                        .                       
+
+【登入】MsgType=1-------------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+20		SenderCompID 		char[20] 			发送方代码
+20		TargetCompID 		char[20] 			接收方代码
+4		HeartBtInt 			Int32 				心跳间隔，单位是秒。用户行情系统登陆时提供给行情网关。
+16		Password			char[16] 			密码
+32		DefaultApplVerID 	char[32] 			二进制协议版本
+4		Checksum			uInt32				校验和
+
+【登出】MsgType=2-------------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+												退出时的会话状态。
+												0 = 会话活跃
+												1 = 会话口令已更改
+												2 = 将过期的会话口令
+												3 = 新会话口令不符合规范
+												4 = 会话退登完成
+4		SessionStatus		Int32				5 = 不合法的用户名或口令
+												6 = 账户锁定
+												7 = 当前时间不允许登录
+												8 = 口令过期
+												9 = 收到的 MsgSeqNum(34)太小
+												10 = 收到的 NextExpectedMsgSeqNum(789)太大.
+												101 = 其他
+												102 = 无效消息
+200		Text				char[200]			文本 注销原因的进一步补充说明。
+4		Checksum			uInt32				校验和
+
+
+【系统心跳】MsgType=3 BodyLength=0---------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+4		Checksum			uInt32				校验和
+
+
+【业务拒绝】MsgType=8-------------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+8		RefSeqNum 			Int64				被拒绝消息的消息序号
+8		RefMsgType 			Int64				被拒绝的消息类型
+10		BusinessRejectRefID char[10]			被拒绝消息对应的业务层 ID。
+2		BusinessRejectReason uInt16				拒绝原因
+50		BusinessRejectText 	char[50] 			拒绝原因说明
+4		Checksum			uInt32				校验和
+
+
+【重传消息】MsgType=390094-------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+1		ResendType			uInt8				重传种类 1 = 逐笔行情数据 2 = 公告信息
+2		ChannelNo			uInt16				频道代码
+8		ApplBegSeqNum		Int64				起始序号
+8		ApplEndSeqNum		Int64				结束序号
+8		NewsID				char[8]				公告唯一标识
+1		ResendStatus		uInt8				重传状态
+16		RejectText			char[16]			错误代码
+4		Checksum			uInt32				校验和
+
+【用户信息报告消息】MsgType=390093-------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+8		OrigTime 			Int64				数据生成时间
+16		VersionCode			char[16]			版本代码01 = 现场版 02 = 网络版
+2		UserNum				uInt16				用户数目 当前连接在本用户行情系统服务器的终端用户数目
+4		Checksum			uInt32				校验和
+
+【快照行情频道统计】MsgType=390090-------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+8		OrigTime 			Int64				数据生成时间
+2		ChannelNo 			uInt16				频道代码
+4		NoMDStreamID 		uInt32				行情类别个数
+3		MDStreamID 			char[3] 			行情类别
+4		StockNum 			uInt32				证券只数
+8		TradingPhaseCode	char[8] 			闭市状态
+4		Checksum			uInt32				校验和
+
+
+【实时行情】->【证券实时状态】MsgType=390013-------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+8		OrigTime 			Int64				数据生成时间
+2		ChannelNo 			uInt16				频道代码
+8		SecurityID 			char[8]				证券代码
+4		SecurityIDSource 	char[4]				证券代码源
+8		FinancialStatus 	char[8]				证券状态
+4		NoSwitch 			uInt32				开关个数
+2		SecuritySwitchType 	uInt16				开关类别
+2		SecuritySwitchStatus uInt16				开关状态
+4		Checksum			uInt32				校验和
+
+【实时行情】->【公告】MsgType=390012-------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+8		OrigTime 			Int64				公告时间
+2		ChannelNo 			uInt16				频道代码
+8		NewsID				char[8]				唯一标识
+												空串表示公告概要,公告概要会重
+												复发送。可通过公告概要确定公告
+												是否有遗漏或是修改。
+128		Headline 			char[128]			公告标题
+8		RawDataFormat 		char[8]				二进制数据格式
+4		RawDataLength 		uInt32				二进制数据长度
+n		RawData 			char[n]				二进制数据 变长
+4		Checksum			uInt32				校验和
+
+【实时行情】->【快照行情】MsgType=3xxx11-------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+8		OrigTime 			Int64				数据生成时间
+2		ChannelNo 			uInt16				频道代码
+3		MDStreamID 			char[3]				行情类别
+8		SecurityID 			char[8]				证券代码
+4		SecurityIDSource 	char[4]				证券代码源
+8		TradingPhaseCode	char[8]				产品所处的交易阶段代码
+8		PrevClosePx 		Int64				昨收价
+8		NumTrades 			Int64				成交笔数
+8		TotalVolumeTrade 	Int64				成交总量
+8		TotalValueTrade 	Int64				成交总金额成交总金额
+？		Extend Fields 		？					各业务扩展字段 根据类型不同
+4		Checksum			uInt32				校验和
+
+【实时行情】->【逐笔委托行情】MsgType=30xx92-------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+2		ChannelNo 			uInt16				频道代码
+8		ApplSeqNum			Int64				消息记录号从 1 开始计数
+3		MDStreamID 			char[3]				行情类别
+8		SecurityID 			char[8]				证券代码
+4		SecurityIDSource 	char[4]				证券代码源
+8		Price 				Int64				委托价格
+8		OrderQty 			Int64				委托数量
+1		Side				char				买卖方向
+8		TransactTime 		Int64				委托时间
+?		Extend Fields 		?					各业务扩展字段
+4		Checksum			uInt32				校验和
+
+【实时行情】->【逐笔成交行情】MsgType=30xx91-------------------------------------------------------
+字节数	字段				类型				说明
+4		MsgType 			uInt32				类型
+4		BodyLength 			uInt32				数据体长度
+2		ChannelNo 			uInt16				频道代码
+8		ApplSeqNum			Int64				消息记录号从 1 开始计数
+3		MDStreamID 			char[3]				行情类别
+8		BidApplSeqNum		Int64				买方委托索引 从 1 开始计数，0 表示无对应委托
+8		OfferApplSeqNum		Int64				卖方委托索引 从 1 开始计数，0 表示无对应委托
+8		SecurityID 			char[8]				证券代码
+4		SecurityIDSource 	char[4]				证券代码源
+8		LastPx 				Int64				委托价格
+8		LastQty 			Int64				委托数量
+1		ExecType			char				成交类别 4=撤销 F=成交
+8		TransactTime 		Int64				委托时间
+？		Extend Fields 		？					各业务扩展字段各业务扩展字段
+4		Checksum			uInt32				校验和
